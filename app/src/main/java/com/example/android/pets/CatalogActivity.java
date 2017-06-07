@@ -94,27 +94,17 @@ public class CatalogActivity extends AppCompatActivity {
 
         cursor = db.query(PetEntry.TABLE_NAME,projection,null,null,null,null,null);
 
-        //sql direto
-        //cursor = db.rawQuery("SELECT * FROM " + PetEntry.TABLE_NAME,null);
+        // Find ListView to populate
+        ListView lvItems = (ListView) findViewById(R.id.list);
 
+        PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this,cursor,0);
 
-        try {
+        // Attach cursor adapter to the ListView
+        lvItems.setAdapter(petCursorAdapter);
 
-            // Find ListView to populate
-            ListView lvItems = (ListView) findViewById(R.id.list);
-
-            PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this,cursor,0);
-
-            // Attach cursor adapter to the ListView
-            lvItems.setAdapter(petCursorAdapter);
-
-
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
 
     }
 }
 
 
-}
+
