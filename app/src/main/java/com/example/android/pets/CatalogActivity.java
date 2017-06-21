@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.pets.data.PetDbHelper;
@@ -55,6 +56,7 @@ public class CatalogActivity extends AppCompatActivity {
         // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
         View emptyView = findViewById(R.id.empty_view);
         petListView.setEmptyView(emptyView);
+
 
 
     }
@@ -95,12 +97,30 @@ public class CatalogActivity extends AppCompatActivity {
         cursor = db.query(PetEntry.TABLE_NAME,projection,null,null,null,null,null);
 
         // Find ListView to populate
-        ListView lvItems = (ListView) findViewById(R.id.list);
+        final ListView lvItems = (ListView) findViewById(R.id.list);
 
-        PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this,cursor,0);
+        final PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this,cursor,0);
 
         // Attach cursor adapter to the ListView
         lvItems.setAdapter(petCursorAdapter);
+
+
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor atual = (Cursor)petCursorAdapter.getItem(position);
+
+                String _id = atual.getString(atual.getColumnIndexOrThrow(PetEntry._ID));
+
+                Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString ("id", _id);
+
+                intent.putExtras(bundle);
+                startActivity(intent);
+
+            }
+        });
 
 
     }

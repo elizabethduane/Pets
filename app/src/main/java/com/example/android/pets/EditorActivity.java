@@ -17,6 +17,8 @@ package com.example.android.pets;
 
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -40,6 +42,9 @@ import com.example.android.pets.data.PetDbHelper;
  * Allows user to create a new pet or edit an existing one.
  */
 public class EditorActivity extends AppCompatActivity {
+
+    final static int ADD = 0;
+    final static int EDIT = 1;
 
     /** EditText field to enter the pet's name */
     private EditText mNameEditText;
@@ -65,6 +70,11 @@ public class EditorActivity extends AppCompatActivity {
     // Create database helper
     private PetDbHelper mDbHelper;
 
+
+    private int status;
+
+    private String idPet;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +89,24 @@ public class EditorActivity extends AppCompatActivity {
         setupSpinner();
 
         mDbHelper = new PetDbHelper(this);
+
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
+
+        if (bundle != null){
+
+            this.setTitle("Edit Pet");
+
+            //To edit
+            idPet = bundle.get("id").toString();
+            loadData(idPet);
+            status = EDIT;
+
+        }else{
+
+            status = ADD;
+
+        }
     }
 
     /**
@@ -153,6 +181,90 @@ public class EditorActivity extends AppCompatActivity {
 
     }
 
+    private void loadData(String id){
+
+        int columm, gender, weight;
+        String sWeight, name="alala", breed;
+
+        // Create and/or open a database to read from it
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        String whereClause =  PetEntry._ID + "="+ id;
+
+        Cursor cursor = db.query(PetEntry.TABLE_NAME,null,whereClause,null,null,null,null);
+
+        if(cursor != null){
+
+            cursor.moveToFirst();
+            name = cursor.getString(cursor.getColumnIndex(PetEntry.COLUMN_NAME));
+            mNameEditText.setText(name);
+
+            breed = cursor.getString(cursor.getColumnIndex(PetEntry.COLUMN_BREED));
+            mBreedEditText.setText(breed);
+
+            gender = cursor.getInt(cursor.getColumnIndex(PetEntry.COLUMN_GENDER));
+            mGenderSpinner.setSelection(gender);
+
+            sWeight = cursor.getString(cursor.getColumnIndex(PetEntry.COLUMN_WEIGHT));
+            mWeightEditText.setText(sWeight);
+
+        }else{
+            Toast.makeText(this, "Error with opening pet", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updatePet(String id){
+
+        //trim remove the blanck spaces
+        String name = mNameEditText.getText().toString().trim();
+        String breed = mBreedEditText.getText().toString().trim();
+        String sWeight = mWeightEditText.getText().toString().trim();
+
+        int weight = Integer.parseInt(sWeight);
+
+        // Create and/or open a database to write from it
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        //create the object no be included
+        ContentValues values = new ContentValues();
+        values.put(PetEntry.COLUMN_NAME, name);
+        values.put(PetEntry.COLUMN_BREED, breed);
+        values.put(PetEntry.COLUMN_GENDER, mGender);
+        values.put(PetEntry.COLUMN_WEIGHT, weight);
+
+        String whereClause =  PetEntry._ID + "="+ id;
+
+        long newRowId = db.update(PetEntry.TABLE_NAME,values,whereClause,null);
+
+
+        if (newRowId==-1){
+            Toast.makeText(this, "Error with to update pet", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "Pet updated", Toast.LENGTH_SHORT).show();
+
+        }
+
+    }
+
+    private void deletePet(String id){
+
+        // Create and/or open a database to write from it
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        String whereClause =  PetEntry._ID + "="+ id;
+
+        long newRowId = db.delete(PetEntry.TABLE_NAME,whereClause,null);
+
+
+        if (newRowId==-1){
+            Toast.makeText(this, "Error on deleting pet", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "Pet deleted", Toast.LENGTH_SHORT).show();
+
+        }
+
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_editor.xml file.
@@ -168,12 +280,18 @@ public class EditorActivity extends AppCompatActivity {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
                 //Save on database
-                insertPet();
+                if(status == ADD)
+                    insertPet();
+                else
+                    updatePet(idPet);
+
                 finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
                 // Do nothing for now
+                deletePet(idPet);
+                finish();
                 return true;
             // Respond to a click on the "Up" arrow button in the app bar
             case android.R.id.home:
