@@ -80,9 +80,6 @@ public class CatalogActivity extends AppCompatActivity {
         // and pass the context, which is the current activity.
         PetDbHelper mDbHelper = new PetDbHelper(this);
 
-        int columm, id, gender, weight;
-        String name, breed;
-
         // Create and/or open a database to read from it
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
